@@ -1,44 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual Flow</title>
-    <style>
-        #alarm-settings {
-            margin: 20px;
-        }
-    </style>
+    <title>DualFlow Application</title>
 </head>
 <body>
-    <h1>Welcome to Dual Flow</h1>
-    <div id="alarm-settings">
-        <h2>Alarm Functionality</h2>
-        <label>
-            <input type="checkbox" id="notification-toggle">
-            Enable Notifications
-        </label><br>
-        <label>
-            <input type="checkbox" id="sound-toggle">
-            Enable Sound
-        </label><br>
-        <button id="set-alarm">Set Alarm</button>
+    <h1>Welcome to the DualFlow Application</h1>
+    <p>This application allows you to manage flows without alarm functionality.</p>
+    <div id="content">
+        <!-- Application content goes here -->
     </div>
-    <script>
-        document.getElementById('set-alarm').addEventListener('click', function() {
-            const notificationEnabled = document.getElementById('notification-toggle').checked;
-            const soundEnabled = document.getElementById('sound-toggle').checked;
-
-            // Alarm Logic Here
-            if (notificationEnabled) {
-                alert('Alarm set! You will be notified.');
-            }
-
-            if (soundEnabled) {
-                const audio = new Audio('alarm.mp3'); // path to alarm sound
-                audio.play();
-            }
-        });
-    </script>
 </body>
 </html>
