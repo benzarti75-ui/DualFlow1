@@ -29,7 +29,7 @@
             <a class="block px-4 py-2 rounded-xl bg-slate-800 text-white shadow-lg">📋 Dashboard</a>
             <a class="block px-4 py-2 rounded-xl hover:bg-slate-800 transition">⚙️ Paramètres</a>
         </nav>
-        <div class="mt-auto text-xs text-slate-500 uppercase tracking-widest">Version 2.0 • 2026</div>
+        <div class="mt-auto text-xs text-slate-500 uppercase tracking-widest">Version 2.1 • 2026</div>
     </aside>
 
     <div class="flex-1 flex flex-col">
@@ -86,6 +86,7 @@
         <h2 class="text-2xl font-bold mb-6">Nouvelle Tâche</h2>
         <div class="space-y-5">
             <input id="taskTitle" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:border-indigo-500 transition" placeholder="Que faut-il faire ?">
+            <input id="taskDate" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:border-indigo-500 transition">
             <div class="grid grid-cols-2 gap-4">
                 <input id="taskStart" type="time" class="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none" value="09:00">
                 <input id="taskEnd" type="time" class="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none" value="10:00">
@@ -114,6 +115,12 @@
         btnPerso.className = t === 'perso' ? "flex-1 py-3 rounded-xl bg-emerald-500 text-white shadow-md" : "flex-1 py-3 text-slate-400";
     };
 
+    const formatDate = (dateStr) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr + "T00:00:00");
+        return date.toLocaleDateString('fr-FR', { weekday: 'short', month: 'short', day: 'numeric' });
+    };
+
     const render = () => {
         proList.innerHTML = ""; persoList.innerHTML = "";
         let total = 0, done = 0;
@@ -132,7 +139,7 @@
                         <div>
                             <p class="font-semibold ${t.completed ? 'task-done text-slate-500' : 'text-slate-100'}">${t.title}</p>
                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter bg-slate-800 px-2 py-0.5 rounded-lg mt-1 inline-block">
-                                ${t.start} • ${t.end}
+                                ${formatDate(t.date)} • ${t.start} → ${t.end}
                             </span>
                         </div>
                     </div>
@@ -165,12 +172,16 @@
 
     const toggle = (type, id) => { tasks[type].find(t => t.id === id).completed = !tasks[type].find(t => t.id === id).completed; save(); render(); };
     const removeTask = (type, id) => { tasks[type] = tasks[type].filter(t => t.id !== id); save(); render(); };
-    const openModal = () => { modal.classList.replace('hidden', 'flex'); setType('pro'); };
+    const openModal = () => { 
+        modal.classList.replace('hidden', 'flex'); 
+        setType('pro');
+        taskDate.valueAsDate = new Date();
+    };
     const closeModal = () => { modal.classList.replace('flex', 'hidden'); taskTitle.value = ""; };
 
     const confirmTask = () => {
-        if(!taskTitle.value) return;
-        tasks[selectedType].push({ id: Date.now(), title: taskTitle.value, start: taskStart.value, end: taskEnd.value, completed: false });
+        if(!taskTitle.value || !taskDate.value) return;
+        tasks[selectedType].push({ id: Date.now(), title: taskTitle.value, date: taskDate.value, start: taskStart.value, end: taskEnd.value, completed: false });
         save(); render(); closeModal();
     };
 
