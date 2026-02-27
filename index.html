@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DualFlow ✨ SaaS Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .task-done { opacity: .4; text-decoration: line-through; }
+        @keyframes glowing {
+            0% { box-shadow: 0 0 5px #6366f1; }
+            50% { box-shadow: 0 0 20px #6366f1; }
+            100% { box-shadow: 0 0 5px #6366f1; }
+        }
+        .full-progress { animation: glowing 1.5s infinite; background: linear-gradient(90deg, #6366f1, #10b981) !important; }
+        .modal-blur { backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen overflow-hidden">
+
+<div class="flex h-full">
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 p-6 hidden md:flex flex-col">
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent mb-10">DualFlow</h1>
+        <nav class="space-y-2 text-slate-300">
+            <a class="block px-4 py-2 rounded-xl bg-slate-800 text-white shadow-lg">📋 Dashboard</a>
+            <a class="block px-4 py-2 rounded-xl hover:bg-slate-800 transition">⚙️ Paramètres</a>
+        </nav>
+        <div class="mt-auto text-xs text-slate-500 uppercase tracking-widest">Version 2.0 • 2026</div>
+    </aside>
+
+    <div class="flex-1 flex flex-col">
+        <header class="h-16 flex items-center justify-between px-8 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md">
+            <h2 class="font-semibold text-lg">Mon Équilibre</h2>
+            <div id="themeToggle" class="cursor-pointer p-2 hover:bg-slate-800 rounded-full transition">🌙</div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-8 space-y-8">
+            <section>
+                <div class="grid md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800">
+                        <p class="text-slate-400 text-sm mb-1">Total</p>
+                        <p id="kpi-total" class="text-4xl font-bold">0</p>
+                    </div>
+                    <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800">
+                        <p class="text-slate-400 text-sm mb-1">Terminées</p>
+                        <p id="kpi-done" class="text-4xl font-bold text-emerald-400">0</p>
+                    </div>
+                    <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800">
+                        <p class="text-slate-400 text-sm mb-1">En cours</p>
+                        <p id="kpi-pending" class="text-4xl font-bold text-indigo-400">0</p>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-800">
+                    <div id="mainProgress" class="bg-indigo-500 h-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                </div>
+            </section>
+
+            <section class="grid lg:grid-cols-2 gap-10">
+                <div>
+                    <h3 class="flex items-center gap-2 mb-6 font-bold text-indigo-400 uppercase tracking-wider text-sm">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Professionnel
+                    </h3>
+                    <div id="proList" class="space-y-4"></div>
+                </div>
+                <div>
+                    <h3 class="flex items-center gap-2 mb-6 font-bold text-emerald-400 uppercase tracking-wider text-sm">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Personnel
+                    </h3>
+                    <div id="persoList" class="space-y-4"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<button id="addBtn" class="fixed bottom-10 right-10 w-16 h-16 rounded-full bg-indigo-500 hover:bg-indigo-400 text-white text-3xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all hover:scale-110 active:scale-95 z-40">
+    +
+</button>
+
+<div id="modal" class="fixed inset-0 bg-slate-950/80 modal-blur hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-[2rem] w-full max-w-md shadow-2xl">
+        <h2 class="text-2xl font-bold mb-6">Nouvelle Tâche</h2>
+        <div class="space-y-5">
+            <input id="taskTitle" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:border-indigo-500 transition" placeholder="Que faut-il faire ?">
+            <div class="grid grid-cols-2 gap-4">
+                <input id="taskStart" type="time" class="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none" value="09:00">
+                <input id="taskEnd" type="time" class="bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none" value="10:00">
+            </div>
+            <div class="flex p-1 bg-slate-800 rounded-2xl">
+                <button onclick="setType('pro')" id="btnPro" class="flex-1 py-3 rounded-xl font-bold transition">Pro</button>
+                <button onclick="setType('perso')" id="btnPerso" class="flex-1 py-3 rounded-xl font-bold transition">Perso</button>
+            </div>
+        </div>
+        <div class="flex gap-4 mt-8">
+            <button onclick="closeModal()" class="flex-1 py-4 text-slate-400 font-medium">Annuler</button>
+            <button onclick="confirmTask()" class="flex-1 py-4 bg-indigo-500 hover:bg-indigo-600 rounded-2xl font-bold shadow-lg transition">Créer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let tasks = JSON.parse(localStorage.getItem("dualflow_v2")) || { pro: [], perso: [] };
+    let selectedType = 'pro';
+
+    const save = () => localStorage.setItem("dualflow_v2", JSON.stringify(tasks));
+
+    const setType = (t) => {
+        selectedType = t;
+        btnPro.className = t === 'pro' ? "flex-1 py-3 rounded-xl bg-indigo-500 text-white shadow-md" : "flex-1 py-3 text-slate-400";
+        btnPerso.className = t === 'perso' ? "flex-1 py-3 rounded-xl bg-emerald-500 text-white shadow-md" : "flex-1 py-3 text-slate-400";
+    };
+
+    const render = () => {
+        proList.innerHTML = ""; persoList.innerHTML = "";
+        let total = 0, done = 0;
+
+        ["pro","perso"].forEach(type => {
+            tasks[type].forEach(t => {
+                total++; if(t.completed) done++;
+                const el = document.createElement("div");
+                el.className = "bg-slate-900 border border-slate-800 p-5 rounded-[1.5rem] flex justify-between items-center hover:border-slate-700 transition group";
+                const icon = type === 'pro' ? '💼' : '🌿';
+
+                el.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <input type="checkbox" ${t.completed ? "checked" : ""} onchange="toggle('${type}',${t.id})" 
+                               class="w-6 h-6 rounded-full border-2 border-slate-700 accent-indigo-500 cursor-pointer">
+                        <div>
+                            <p class="font-semibold ${t.completed ? 'task-done text-slate-500' : 'text-slate-100'}">${t.title}</p>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter bg-slate-800 px-2 py-0.5 rounded-lg mt-1 inline-block">
+                                ${t.start} • ${t.end}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl group-hover:scale-125 transition-transform">${t.completed ? '✨' : icon}</span>
+                        <button onclick="removeTask('${type}',${t.id})" class="text-slate-700 hover:text-red-400 text-2xl ml-2">×</button>
+                    </div>
+                `;
+                document.getElementById(type + "List").appendChild(el);
+            });
+        });
+
+        document.getElementById("kpi-total").textContent = total;
+        document.getElementById("kpi-done").textContent = done;
+        document.getElementById("kpi-pending").textContent = total - done;
+
+        const progress = total > 0 ? (done / total) * 100 : 0;
+        const bar = document.getElementById("mainProgress");
+        bar.style.width = progress + "%";
+
+        if (progress === 100 && total > 0) {
+            if (!bar.classList.contains('full-progress')) {
+                bar.classList.add('full-progress');
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            }
+        } else {
+            bar.classList.remove('full-progress');
+        }
+    };
+
+    const toggle = (type, id) => { tasks[type].find(t => t.id === id).completed = !tasks[type].find(t => t.id === id).completed; save(); render(); };
+    const removeTask = (type, id) => { tasks[type] = tasks[type].filter(t => t.id !== id); save(); render(); };
+    const openModal = () => { modal.classList.replace('hidden', 'flex'); setType('pro'); };
+    const closeModal = () => { modal.classList.replace('flex', 'hidden'); taskTitle.value = ""; };
+
+    const confirmTask = () => {
+        if(!taskTitle.value) return;
+        tasks[selectedType].push({ id: Date.now(), title: taskTitle.value, start: taskStart.value, end: taskEnd.value, completed: false });
+        save(); render(); closeModal();
+    };
+
+    addBtn.onclick = openModal;
+    render();
+</script>
+</body>
+</html>
